@@ -4,7 +4,7 @@ using StackExchange.Redis;
 using var redis = ConnectionMultiplexer.Connect("localhost:6379");
 var channelStartupDelayMs = 300;
 var channelMessageDelayMs = 100;
-var channelsCount = 1000;
+var channelsCount = 10000;
 var messageText = "Privet, kak dela. Zachem ti nadel kepku. Neznau. No Zil Bil Pes horoshiy multick. Da, no zolushka luche. Ebanutii";
 var channelPrefix = "channel";
 var traceAfterMessagesCount = 100;
