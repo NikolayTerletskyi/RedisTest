@@ -12,6 +12,7 @@ var subscriber = redis.GetSubscriber();
 Console.WriteLine("Connection estabilished");
 
 var statisticsGlobal = new Statistics();
+var statisticsCurrent = new Statistics();
 int startPoint = 0;
 
 void Measure(Message message, DateTime recieveTime)
@@ -23,6 +24,7 @@ void Measure(Message message, DateTime recieveTime)
     var recieveTimeInTicks = (int)(recieveTime.TimeOfDay.TotalMilliseconds - startPoint);
     var latency = recieveTimeInTicks - message.SendTime;
     statisticsGlobal.Increment(latency);
+    statisticsCurrent.Increment(latency);
 }
 
 void StartPointHandler  (string payload)
@@ -71,24 +73,35 @@ subscriber.Subscribe(SystemChannels.CommandChannel.ToString(), (_, value) =>
 
 Console.WriteLine("Subscribed press any key to exit");
 
+string CreateReport(Statistics statistics)
+{
+    var reportBuilder = new StringBuilder();
+    reportBuilder.AppendLine($"Total message count: {statistics.Count}");
+    reportBuilder.AppendLine($"Average latency: {statistics.Sum / statistics.Count}");
+    reportBuilder.AppendLine($"Min latency: {statistics.Min}");
+    reportBuilder.AppendLine($"Max latency: {statistics.Max}");
+    reportBuilder.AppendLine($"Working time: {statistics.WorkingTime}");
+    reportBuilder.AppendLine($"Avg messages per sec: {statistics.AvgMessagesPerSecond}");
+
+    return reportBuilder.ToString();
+}
+
+
 while (true)
 {
     if(statisticsGlobal.Count == 0)
     {
         continue;
     }
-    var reportBuilder = new StringBuilder();
-    reportBuilder.AppendLine($"Total message count: {statisticsGlobal.Count}");
-    reportBuilder.AppendLine($"Average latency: {statisticsGlobal.Sum / statisticsGlobal.Count}");
-    reportBuilder.AppendLine($"Min latency: {statisticsGlobal.Min}");
-    reportBuilder.AppendLine($"Max latency: {statisticsGlobal.Max}");
-    reportBuilder.AppendLine($"Working time: {statisticsGlobal.WorkingTime}");
-    reportBuilder.AppendLine($"Avg messages per sec: {statisticsGlobal.AvgMessagesPerSecond}");
 
-    var report = reportBuilder.ToString();
+    var globalReport = CreateReport(statisticsGlobal);
+    var currentReport = CreateReport(statisticsCurrent);
 
-    Console.WriteLine(report);
-    File.WriteAllText("./statistics.txt", report);
+    Console.WriteLine(globalReport);
+    File.WriteAllText("./GlobalStatistics.txt", globalReport);
+    File.WriteAllText("./CurrentStatistics.txt", currentReport);
+
+    statisticsCurrent = new Statistics();
 
     await Task.Delay(TimeSpan.FromSeconds(10));
 }
