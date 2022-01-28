@@ -5,7 +5,7 @@ using var redis = ConnectionMultiplexer.Connect("localhost:6379");
 var channelStartupDelayMs = 300;
 var channelMessageDelayMs = 100;
 var channelsCount = 10000;
-var messageText = "Privet, kak dela. Zachem ti nadel kepku. Neznau. No Zil Bil Pes horoshiy multick. Da, no zolushka luche. Ebanutii";
+//var messageText = new String('a', 50);
 var channelPrefix = "channel";
 var traceAfterMessagesCount = 100;
 
@@ -18,6 +18,8 @@ var startPointMessage = new SystemMessage(Now(), SystemMessageTypes.SetStartPoin
 var subscriber = redis.GetSubscriber();
 await subscriber.PublishAsync(SystemChannels.CommandChannel.ToString(), startPointMessage.ToString());
 Console.WriteLine("Startpoint messege sent");
+
+var random = new Random();
 
 async Task StartChannel(int channelNumber)
 {
@@ -32,7 +34,9 @@ async Task StartChannel(int channelNumber)
     int count = 0;
     while (true)
     {
-        var message = new Message(Now(), messageText);
+        var backet = random.Next(1, 10);
+        var payload = backet < 8 ? new string('a', 50) : new String('a', 1000);
+        var message = new Message(Now(), payload);
         await subscriber.PublishAsync(channelName, message.ToString());
         await Task.Delay(channelMessageDelayMs);
         count++;

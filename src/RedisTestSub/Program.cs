@@ -71,16 +71,24 @@ subscriber.Subscribe(SystemChannels.CommandChannel.ToString(), (_, value) =>
 
 Console.WriteLine("Subscribed press any key to exit");
 
-Console.ReadKey();
+while (true)
+{
+    if(statisticsGlobal.Count == 0)
+    {
+        continue;
+    }
+    var reportBuilder = new StringBuilder();
+    reportBuilder.AppendLine($"Total message count: {statisticsGlobal.Count}");
+    reportBuilder.AppendLine($"Average latency: {statisticsGlobal.Sum / statisticsGlobal.Count}");
+    reportBuilder.AppendLine($"Min latency: {statisticsGlobal.Min}");
+    reportBuilder.AppendLine($"Max latency: {statisticsGlobal.Max}");
+    reportBuilder.AppendLine($"Working time: {statisticsGlobal.WorkingTime}");
+    reportBuilder.AppendLine($"Avg messages per sec: {statisticsGlobal.AvgMessagesPerSecond}");
 
-var reportBuilder = new StringBuilder();
-reportBuilder.AppendLine($"Total message count: {statisticsGlobal.Count}");
-reportBuilder.AppendLine($"Average latency: {statisticsGlobal.Sum / statisticsGlobal.Count}");
-reportBuilder.AppendLine($"Min latency: {statisticsGlobal.Min}");
-reportBuilder.AppendLine($"Max latency: {statisticsGlobal.Max}");
-reportBuilder.AppendLine($"Working time: {statisticsGlobal.WorkingTime}");
-reportBuilder.AppendLine($"Avg messages per sec: {statisticsGlobal.AvgMessagesPerSecond}");
+    var report = reportBuilder.ToString();
 
-var report = reportBuilder.ToString();
+    Console.WriteLine(report);
+    File.WriteAllText("./statistics.txt", report);
 
-Console.WriteLine(report);
+    await Task.Delay(TimeSpan.FromSeconds(10));
+}
